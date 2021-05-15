@@ -7,7 +7,7 @@ using System.Text;
 
 namespace SharedLib.Algs
 {
-    public class RSACryption:ICryptoTransform
+    public class RSACryption : ICryptoTransform
     {
         private string _e;
         private string _d;
@@ -23,11 +23,11 @@ namespace SharedLib.Algs
 
         public bool CanReuseTransform => throw new NotImplementedException();
 
-        public bool CanTransformMultipleBlocks => throw new NotImplementedException();
+        public bool CanTransformMultipleBlocks => false;
 
-        public int InputBlockSize => throw new NotImplementedException();
+        public int InputBlockSize => 1048576;
 
-        public int OutputBlockSize => throw new NotImplementedException();
+        public int OutputBlockSize => 1048576;
 
         public RSACryption()
         {
@@ -80,7 +80,12 @@ namespace SharedLib.Algs
             try
             {
                 var value = new BigInteger(data);
-                return BigInteger.ModPow(value, _dv, _nv).ToByteArray();
+                var rval = BigInteger.ModPow(value, _dv, _nv);
+                var e = rval.ToString();
+                return rval.ToByteArray();
+                //var t1 = rval.ToByteArray();
+                //var t2 = new BigInteger(t1);
+                //return Encoding.ASCII.GetBytes(e);
             }
             catch (ArgumentException ex)
             {
@@ -93,7 +98,12 @@ namespace SharedLib.Algs
             try
             {
                 var value = new BigInteger(data);
-                return BigInteger.ModPow(value, _ev, _nv).ToByteArray();
+                //if(!BigInteger.TryParse(e, out var value))
+                //{
+                //    throw new ArgumentException("Argument error.");
+                //}
+                var v = BigInteger.ModPow(value, _ev, _nv);
+                return v.ToByteArray();
             }
             catch (ArgumentException ex)
             {
@@ -103,16 +113,25 @@ namespace SharedLib.Algs
 
         public int TransformBlock(byte[] inputBuffer, int inputOffset, int inputCount, byte[] outputBuffer, int outputOffset)
         {
-            if(inputBuffer.Length <= inputCount + inputOffset)
+            if (inputBuffer.Length <= inputCount + inputOffset)
             {
                 throw new ArgumentOutOfRangeException("Input data length has been out of range.");
             }
-            return 0;
+            var value = new BigInteger(inputBuffer);
+            outputBuffer = BigInteger.ModPow(value, _dv, _nv).ToByteArray();
+            return 1;
         }
 
         public byte[] TransformFinalBlock(byte[] inputBuffer, int inputOffset, int inputCount)
         {
-            throw new NotImplementedException();
+            if (inputBuffer.Length <= inputCount + inputOffset)
+            {
+                throw new ArgumentOutOfRangeException("Input data length has been out of range.");
+            }
+            var newBuffer = new byte[inputCount];
+            Array.Copy(inputBuffer, newBuffer, inputCount);
+            var value = new BigInteger(inputBuffer);
+            return BigInteger.ModPow(value, _dv, _nv).ToByteArray();
         }
 
         public void Dispose()

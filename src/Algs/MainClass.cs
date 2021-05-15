@@ -12,12 +12,17 @@ namespace SharedLib.Algs
 {
     class MainClass
     {
-        //[STAThread]
-        static void Main0()
+        [STAThread]
+        static void Main()
         {
             RSACryption rs = RSACryption.Create();
 
-            string toDisplay = "12341Hello您好！!  .";
+            string toDisplay = "Company Name: 123\n" +
+                "Start Time: 2021/01/02\n" +
+                "Start Time: 2021/01/02\n" +
+                "Start Time: 2021/01/02\n" +
+                "Start Time: 2021/01/02\n" +
+                "Start Time: 2021/01/02\n";
             var bs = Encoding.UTF8.GetBytes(toDisplay);
             var oo = rs.SignData(bs);
             var va = Convert.ToBase64String(oo);
