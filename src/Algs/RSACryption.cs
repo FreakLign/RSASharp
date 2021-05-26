@@ -111,6 +111,69 @@ namespace SharedLib.Algs
             }
         }
 
+        /// <summary>
+        /// 创建密钥对。
+        /// </summary>
+        /// <param name="n">N值</param>
+        /// <param name="e">公钥</param>
+        /// <param name="d">密钥</param>
+        public static void Create(out byte[] n, out byte[] e, out byte[] d)
+        {
+            RSACryption r = new RSACryption();
+            var rand = new Random((int)DateTime.Now.ToFileTime());
+            BigInteger p = PrimeFunctions.BigPrimeGroups[rand.Next(0, PrimeFunctions.BigPrimeGroups.Length)];
+            BigInteger q = PrimeFunctions.BigPrimeGroups[rand.Next(0, PrimeFunctions.BigPrimeGroups.Length)];
+            while (q == p)
+            {
+                q = PrimeFunctions.BigPrimeGroups[rand.Next(0, PrimeFunctions.BigPrimeGroups.Length)];
+            }
+            BigInteger phi = (p - 1) * (q - 1);
+            BigInteger nv = p * q;
+            BigInteger k = rand.Next(10, 20);
+            BigInteger ev = 1;
+            BigInteger dv = -1;
+            while (dv == -1)
+            {
+                ev = PrimeFunctions.MiddlePrimeGroups[rand.Next(0, PrimeFunctions.MiddlePrimeGroups.Length)];
+                dv = ExtendedEuclideanalgorithm.GetMultiplicativeInverseModule(ev, 0 - phi);
+            }
+            n = nv.ToByteArray();
+            e = ev.ToByteArray();
+            d = dv.ToByteArray();
+        }
+
+        /// <summary>
+        /// 加密数据。
+        /// </summary>
+        /// <param name="data">数据</param>
+        /// <param name="n">N值</param>
+        /// <param name="e">公（私）钥</param>
+        /// <returns>加密后的数值。</returns>
+        public static byte[] EncryptData(byte[] data, byte[] n, byte[] e)
+        {
+            var value = new BigInteger(data);
+            var nv = new BigInteger(n);
+            var ev = new BigInteger(e);
+            var v = BigInteger.ModPow(value, ev, nv);
+            return v.ToByteArray();
+        }
+
+        /// <summary>
+        /// 解密数据。
+        /// </summary>
+        /// <param name="data">数据</param>
+        /// <param name="n">N值</param>
+        /// <param name="e">私（公）钥</param>
+        /// <returns>解密后的数值。</returns>
+        public static byte[] DecryptData(byte[] data, byte[] n, byte[] d)
+        {
+            var value = new BigInteger(data);
+            var nv = new BigInteger(n);
+            var dv = new BigInteger(d);
+            var v = BigInteger.ModPow(value, dv, nv);
+            return v.ToByteArray();
+        }
+
         public int TransformBlock(byte[] inputBuffer, int inputOffset, int inputCount, byte[] outputBuffer, int outputOffset)
         {
             if (inputBuffer.Length <= inputCount + inputOffset)
